@@ -25,7 +25,7 @@ class Firework:
                 "y": y,
                 "size": size,
                 "color": r.choice(self.colors),
-                "alpha": 1.0  # 초기 투명도 (1: 불투명, 0: 투명)
+                "alpha": 1.0  #투명도 (1: 불투명, 0: 투명)
             })
     def update(self):
         # 수명 감소
@@ -48,7 +48,7 @@ def draw_firework(t, firework):
             t.dot(int(p["size"]), p["color"])
 
 # 트리 그리기
-def draw_tree(t):
+def draw_tree(t, alpha):
     t.penup()
 
     # 트리 모양을 그리기
@@ -64,7 +64,7 @@ def draw_tree(t):
         " &&&&###########   ",
     ]
     stx = -110
-    sty = 100
+    sty = 150
     for i, row in enumerate(tree):
         t.goto(stx, sty - i * 20)
         for j, char in enumerate(row):
@@ -75,19 +75,19 @@ def draw_tree(t):
                 t.circle(5)
                 t.end_fill()
             if char=='*':
-                t.color("blue") #파랑 *
+                t.color((0, 0, alpha))  #파랑 *
                 t.goto(stx + j * 10, sty - i * 20)
                 t.begin_fill()
                 t.circle(5) 
                 t.end_fill()
             if char=='@':
-                t.color("red") #빨강 @
+                t.color((alpha, 0, 0)) #빨강 @
                 t.goto(stx + j * 10, sty - i * 20)
                 t.begin_fill()
                 t.circle(5)
                 t.end_fill()
             if char=='&':
-                t.color("yellow") #노랑 &
+                t.color((alpha, alpha, 0)) #노랑 &
                 t.goto(stx + j * 10, sty - i * 20)
                 t.begin_fill()
                 t.circle(5)
@@ -98,7 +98,7 @@ def draw_tree(t):
         "      |   |       ",
         "      |___|       ",
     ]
-    trky = -75
+    trky = -25
     for i, row in enumerate(trunk):
         t.goto(stx, trky - i * 20)
         t.write(row, align="left", font=("Courier", 12, "normal"))
@@ -108,10 +108,13 @@ def colur():
     return r.choice(colors)
 
 # 메시지 그리기
-def message():
-    t.goto(-20, -120)
-    t.color("white")
-    t.write("Merry Christmas!", align="center", font=("@Fixedsys", 20, "normal"))
+def message(pen, alpha):
+    pen.clear()
+    pen.penup()
+    pen.goto(-20, -90)
+    pen.pendown()
+    pen.color((alpha, alpha, alpha))
+    pen.write("Merry Christmas!", align="center", font=("@Fixedsys", 30, "normal"))
 
 # 눈송이 생성
 def create_snow():
@@ -148,7 +151,7 @@ def move(snowflakes):
 
 def Star(s):
     s.penup()
-    s.goto(-40, 126)
+    s.goto(-40, 176)
     s.pendown()
     s.color("yellow")
     s.begin_fill()
@@ -163,7 +166,8 @@ def mountain(pen):
     pen.pendown()
 
     pen.fillcolor("darkgreen")
-    pen.color("darkgreen")    
+    pen.color("white")
+    pen.pensize(10)
     pen.begin_fill()  # 채우기 시작
 
     for x in range(-400, 400, 10):
@@ -192,12 +196,12 @@ def mountain2(pen):
     pen.goto(-400, -200)  # 시작 위치 설정
     pen.pendown()
 
-    pen.fillcolor("white")
-    pen.color("white")    
+    pen.fillcolor("darkgreen")
+    pen.color("darkgreen")    
     pen.begin_fill()  # 채우기 시작
 
     for x in range(-400, 400, 10):
-        y = -200 + abs(x) * 0.4 + r.randint(-10, 10)
+        y = -200 + abs(x) * 0.4 + r.randint(-5, 5)
         pen.goto(x, y)
 
     # 산 아래 부분 닫기
@@ -226,19 +230,22 @@ def main():
     screen.tracer(0)
     t.hideturtle()
 
-    # 트리 터틀과 눈송이 터틀 생성
+    # 트리 터틀
     tr = t.Turtle()
     tr.hideturtle()
     tr.speed(0)
 
+    # 눈 터틀
     st = t.Turtle()
     st.hideturtle()
     st.speed(0)
 
+    # 메세지
     pen = t.Turtle()
     pen.speed(0)
     pen.hideturtle()
-    
+
+    # 별
     star = t.Turtle()
     star.hideturtle()
     star.speed(0)
@@ -248,16 +255,27 @@ def main():
     turtle.hideturtle()
     turtle.speed(0)
 
-    # 트리와 메시지 그리기
-    draw_tree(tr)
-    message()
+    mes = t.Turtle()
+    mes.hideturtle()
+    mes.speed(0)
+
+    #메시지
+    message(mes, 1.0)
     Star(star)
-    mountain2(pen)
     mountain(pen)
+    mountain2(pen)
 
     # 눈송이 초기화
     snowflakes = [create_snow() for _ in range(50)]
 
+    #트리 밝기 조절용
+    alpha = 1.0
+    fade = False
+
+    #메세지 밝기 조절용
+    alphame = 1.0
+    fademe = False
+    
     # 메인
     while True:
         #눈송이만 이동
@@ -266,6 +284,32 @@ def main():
         # 새로 눈송이 그리기
         draw_snow(snowflakes, st)
 
+        #트리 밝기 조절
+        t.clear()
+        draw_tree(t, alpha)
+
+        if fade:
+            alpha += 0.01
+            if alpha >= 1.0:
+                fade = False
+        else:
+            alpha -= 0.01
+            if alpha <= 0.3:  # 최소 밝기
+                fade = True
+
+        #메세지 밝기 조절
+        if fademe:
+            alphame += 0.01
+            if alphame >= 1.0:
+                fademe = False
+        else:
+            alphame -= 0.01
+            if alphame <= 0.5:  # 최소 밝기
+                fademe = True
+
+        # 메시지 그리기
+        message(mes, alphame)
+        
         if r.random() < 0.05:
             x = r.randint(-300, 300)
             y = r.randint(100, 300)
